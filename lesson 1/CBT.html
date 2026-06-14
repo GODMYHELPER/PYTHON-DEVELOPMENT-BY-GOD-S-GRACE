@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart CBT Creator - AI Edition</title>
+    <script async src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .app-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* HOME SCREEN */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .header-emoji {
+            font-size: 64px;
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-card {
+            text-align: center;
+        }
+
+        .upload-emoji {
+            font-size: 80px;
+            margin-bottom: 1rem;
+        }
+
+        .upload-card h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-card p {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .upload-button {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .upload-button:active {
+            transform: translateY(0);
+        }
+
+        .processing-card {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: #f9f9f9;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(102, 126, 234, 0.2);
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .processing-card h3 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 0.5rem;
+        }
+
+        .processing-card p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress-status {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .ready-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            text-align: center;
+            border: 2px solid #667eea;
+        }
+
+        .ready-card p {
+            color: #667eea;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .ready-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 1.5rem;
+        }
+
+        .start-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #00d084 0%, #00a55f 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 5px 15px rgba(0, 208, 132, 0.4);
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 208, 132, 0.6);
+        }
+
+        .review-screen {
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .back-button {
+            display: block;
+            margin-bottom: 1rem;
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: 1px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .back-button:hover {
+            background: #f9f9f9;
+        }
+
+        .question-review {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-review h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 1rem;
+        }
+
+        .question-review textarea,
+        .question-review input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 0.8rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            resize: vertical;
+            min-height: 40px;
+        }
+
+        .option-inputs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .option-inputs input {
+            margin-bottom: 0;
+        }
+
+        .delete-btn {
+            padding: 8px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .delete-btn:hover {
+            background: #ee5a52;
+        }
+
+        /* TEST SCREEN */
+        .test-header {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .progress-section h3,
+        .timer-section h3 {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .progress-info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 0.8rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .timer-display {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+            text-align: right;
+        }
+
+        .timer-display.warning {
+            color: #e74c3c;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-number {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-button {
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            background: #fafafa;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .option-button:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .option-button.selected {
+            border: 2px solid #667eea;
+            background: #e8ecff;
+            font-weight: 500;
+        }
+
+        .option-letter {
+            font-weight: 700;
+            color: #667eea;
+            min-width: 28px;
+            font-size: 16px;
+        }
+
+        .test-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .button-secondary {
+            background: #f5f5f5;
+            color: #1a1a1a;
+            border: 1px solid #e0e0e0;
+        }
+
+        .button-secondary:hover:not(:disabled) {
+            background: #eeeeee;
+        }
+
+        .button-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .button-submit {
+            background: linear-gradient(135deg, #00d084 0%, #00a55f 100%);
+            color: white;
+            grid-column: 2;
+            box-shadow: 0 5px 15px rgba(0, 208, 132, 0.4);
+        }
+
+        .button-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 208, 132, 0.6);
+        }
+
+        /* RESULTS SCREEN */
+        .results-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .results-emoji {
+            font-size: 80px;
+            margin-bottom: 1rem;
+        }
+
+        .results-header h1 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 42px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .result-value.time {
+            font-family: 'Courier New', monospace;
+            font-size: 28px;
+        }
+
+        .button-reset {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .test-header {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .timer-display {
+                text-align: left;
+            }
+
+            .test-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .button-submit {
+                grid-column: 1;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .option-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HOME SCREEN -->
+        <div id="homeScreen" class="screen active">
+            <div class="header">
+                <div class="badge">AI Powered • Free • No API Key</div>
+                <div class="header-emoji">📚</div>
+                <h1>Smart CBT Creator</h1>
+                <p>Snap photos → AI extracts → Practice instantly</p>
+            </div>
+
+            <div class="card upload-card">
+                <div class="upload-emoji">📷</div>
+                <h2>Upload Book Photos</h2>
+                <p>Snap clear photos of your question pages and AI will extract them automatically</p>
+                <label class="upload-button">
+                    📤 Choose Photos
+                    <input type="file" id="imageInput" multiple accept="image/*" style="display: none;" onchange="handleImageUpload(event)" />
+                </label>
+            </div>
+
+            <div id="processingSection" class="card processing-card hidden">
+                <div class="spinner"></div>
+                <h3>Processing Your Image...</h3>
+                <p>AI is reading your photo and extracting questions</p>
+                <div class="progress-status" id="progressStatus">Starting...</div>
+            </div>
+
+            <div id="readyCard" class="card ready-card hidden">
+                <p>Questions Extracted</p>
+                <div class="ready-number" id="questionCount">0</div>
+                <button class="start-button" onclick="showReviewScreen()">✓ Review & Edit</button>
+            </div>
+        </div>
+
+        <!-- REVIEW SCREEN -->
+        <div id="reviewScreen" class="screen review-screen">
+            <div class="header">
+                <div class="header-emoji">✏️</div>
+                <h1>Review & Edit</h1>
+                <p>Make sure questions are correct before starting test</p>
+            </div>
+
+            <div class="card">
+                <button class="back-button" onclick="showScreen('homeScreen')">← Back to Home</button>
+                
+                <div id="questionsReview"></div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button class="back-button" onclick="showScreen('homeScreen')" style="border-color: #ccc; color: #333; margin: 0;">← Back</button>
+                    <button class="start-button" onclick="startTest()" style="margin: 0;">▶️ Start Test</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEST SCREEN -->
+        <div id="testScreen" class="screen hidden">
+            <div class="test-header">
+                <div class="progress-section">
+                    <h3>Progress</h3>
+                    <div class="progress-info">Question <span id="currentQNum">1</span> of <span id="totalQNum">10</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+                <div class="timer-section">
+                    <h3>Time Remaining</h3>
+                    <div class="timer-display" id="timerDisplay">00:00:00</div>
+                </div>
+            </div>
+
+            <div class="question-card">
+                <div class="question-number" id="qNumber">Question 1</div>
+                <div class="question-text" id="questionText">Loading question...</div>
+                <div class="options" id="optionsContainer"></div>
+            </div>
+
+            <div class="test-buttons">
+                <button class="button button-secondary" onclick="prevQuestion()" id="prevBtn" disabled>← Previous</button>
+                <button class="button button-primary button-submit" onclick="nextOrSubmit()" id="nextBtn">Next →</button>
+            </div>
+        </div>
+
+        <!-- RESULTS SCREEN -->
+        <div id="resultsScreen" class="screen hidden">
+            <div class="results-header">
+                <div class="results-emoji" id="resultsEmoji">🎉</div>
+                <h1>Test Completed!</h1>
+            </div>
+
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-label">Score</div>
+                    <div class="result-value" id="scoreValue">0%</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Answered</div>
+                    <div class="result-value" id="answeredValue">0/0</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Time Taken</div>
+                    <div class="result-value time" id="timeValue">00:00:00</div>
+                </div>
+            </div>
+
+            <button class="button-reset" onclick="resetApp()">🔄 Start New Test</button>
+        </div>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentQuestion = 0;
+        let answers = {};
+        let timeRemaining = 3600;
+        let timerInterval = null;
+        let testDuration = 0;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        async function handleImageUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            questions = [];
+            document.getElementById('processingSection').classList.remove('hidden');
+            document.getElementById('readyCard').classList.add('hidden');
+
+            for (const file of files) {
+                await processImage(file);
+            }
+
+            document.getElementById('processingSection').classList.add('hidden');
+            document.getElementById('readyCard').classList.remove('hidden');
+            document.getElementById('questionCount').textContent = questions.length;
+        }
+
+        async function processImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const updateProgress = (msg) => {
+                            document.getElementById('progressStatus').textContent = msg;
+                        };
+
+                        updateProgress('Reading image...');
+
+                        const result = await Tesseract.recognize(e.target.result, 'eng', {
+                            logger: m => {
+                                if (m.status === 'recognizing') {
+                                    const progress = Math.round(m.progress * 100);
+                                    updateProgress(`Extracting text... ${progress}%`);
+                                }
+                            }
+                        });
+
+                        updateProgress('Parsing questions...');
+                        const text = result.data.text;
+                        parseQuestions(text);
+
+                    } catch (error) {
+                        console.error('OCR Error:', error);
+                        alert('Error processing image. Please try another photo.');
+                    }
+                    resolve();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function parseQuestions(text) {
+            const lines = text.split('\n').filter(l => l.trim());
+            let currentQ = null;
+            let currentOptions = [];
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                
+                if (/^\d+[.):\s]/.test(trimmed)) {
+                    if (currentQ && currentOptions.length >= 2) {
+                        questions.push({
+                            num: questions.length + 1,
+                            question: currentQ,
+                            options: currentOptions.slice(0, 4).map((o, i) => {
+                                const letter = String.fromCharCode(65 + i);
+                                return o.replace(/^[A-D][.):\s]/, `${letter}: `);
+                            })
+                        });
+                    }
+                    currentQ = trimmed.replace(/^\d+[.):\s]/, '').trim();
+                    currentOptions = [];
+                } else if (/^[A-D][.):\s]/.test(trimmed) && currentQ) {
+                    currentOptions.push(trimmed);
+                }
+            }
+
+            if (currentQ && currentOptions.length >= 2) {
+                questions.push({
+                    num: questions.length + 1,
+                    question: currentQ,
+                    options: currentOptions.slice(0, 4).map((o, i) => {
+                        const letter = String.fromCharCode(65 + i);
+                        return o.replace(/^[A-D][.):\s]/, `${letter}: `);
+                    })
+                });
+            }
+        }
+
+        function showReviewScreen() {
+            if (questions.length === 0) {
+                alert('No questions extracted. Please try a clearer image.');
+                return;
+            }
+            showScreen('reviewScreen');
+            displayReview();
+        }
+
+        function displayReview() {
+            const container = document.getElementById('questionsReview');
+            container.innerHTML = '';
+
+            questions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'question-review';
+                div.innerHTML = `
+                    <h3>Question ${idx + 1}</h3>
+                    <textarea placeholder="Question text" id="q${idx}">${q.question}</textarea>
+                    <div class="option-inputs">
+                        <input type="text" placeholder="Option A" id="a${idx}" value="${q.options[0]?.replace(/^A:\s*/, '') || ''}" />
+                        <input type="text" placeholder="Option B" id="b${idx}" value="${q.options[1]?.replace(/^B:\s*/, '') || ''}" />
+                        <input type="text" placeholder="Option C" id="c${idx}" value="${q.options[2]?.replace(/^C:\s*/, '') || ''}" />
+                        <input type="text" placeholder="Option D" id="d${idx}" value="${q.options[3]?.replace(/^D:\s*/, '') || ''}" />
+                    </div>
+                    <button class="delete-btn" onclick="deleteQuestion(${idx})">Delete Question</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function deleteQuestion(idx) {
+            questions.splice(idx, 1);
+            displayReview();
+        }
+
+        function startTest() {
+            // Update questions from review form
+            questions.forEach((q, idx) => {
+                q.question = document.getElementById(`q${idx}`).value;
+                q.options = [
+                    `A: ${document.getElementById(`a${idx}`).value}`,
+                    `B: ${document.getElementById(`b${idx}`).value}`,
+                    `C: ${document.getElementById(`c${idx}`).value}`,
+                    `D: ${document.getElementById(`d${idx}`).value}`
+                ];
+            });
+
+            if (questions.length === 0) {
+                alert('Please add at least one question');
+                return;
+            }
+
+            currentQuestion = 0;
+            answers = {};
+            testDuration = questions.length * 90;
+            timeRemaining = testDuration;
+
+            showScreen('testScreen');
+            displayQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    endTest();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const hours = Math.floor(timeRemaining / 3600);
+            const mins = Math.floor((timeRemaining % 3600) / 60);
+            const secs = timeRemaining % 60;
+            const display = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            
+            const timerEl = document.getElementById('timerDisplay');
+            timerEl.textContent = display;
+            
+            if (timeRemaining < 300) {
+                timerEl.classList.add('warning');
+            } else {
+                timerEl.classList.remove('warning');
+            }
+        }
+
+        function displayQuestion() {
+            const q = questions[currentQuestion];
+            const totalQ = questions.length;
+            const progress = ((currentQuestion + 1) / totalQ) * 100;
+
+            document.getElementById('currentQNum').textContent = currentQuestion + 1;
+            document.getElementById('totalQNum').textContent = totalQ;
+            document.getElementById('qNumber').textContent = `Question ${currentQuestion + 1}`;
+            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            q.options.forEach((option, idx) => {
+                const letter = String.fromCharCode(65 + idx);
+                const selected = answers[currentQuestion] === letter;
+                const btn = document.createElement('button');
+                btn.className = `option-button ${selected ? 'selected' : ''}`;
+                btn.innerHTML = `<span class="option-letter">${letter}</span>${option.replace(/^[A-D]:\s*/, '')}`;
+                btn.onclick = () => selectAnswer(letter);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('prevBtn').disabled = currentQuestion === 0;
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentQuestion === totalQ - 1) {
+                nextBtn.textContent = '✓ Submit Test';
+                nextBtn.className = 'button button-primary button-submit';
+            } else {
+                nextBtn.textContent = 'Next →';
+                nextBtn.className = 'button button-primary';
+            }
+        }
+
+        function selectAnswer(letter) {
+            answers[currentQuestion] = letter;
+            displayQuestion();
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                displayQuestion();
+            }
+        }
+
+        function nextOrSubmit() {
+            if (currentQuestion === questions.length - 1) {
+                endTest();
+            } else {
+                currentQuestion++;
+                displayQuestion();
+            }
+        }
+
+        function endTest() {
+            clearInterval(timerInterval);
+            const answered = Object.keys(answers).length;
+            const total = questions.length;
+            const percentage = Math.round((answered / total) * 100);
+            const timeTaken = testDuration - timeRemaining;
+
+            const hours = Math.floor(timeTaken / 3600);
+            const mins = Math.floor((timeTaken % 3600) / 60);
+            const secs = timeTaken % 60;
+            const timeDisplay = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+            document.getElementById('scoreValue').textContent = percentage + '%';
+            document.getElementById('answeredValue').textContent = answered + '/' + total;
+            document.getElementById('timeValue').textContent = timeDisplay;
+            document.getElementById('resultsEmoji').textContent = percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '📚';
+
+            showScreen('resultsScreen');
+        }
+
+        function resetApp() {
+            questions = [];
+            currentQuestion = 0;
+            answers = {};
+            document.getElementById('imageInput').value = '';
+            document.getElementById('readyCard').classList.add('hidden');
+            showScreen('homeScreen');
+        }
+    </script>
+</body>
+</html>
